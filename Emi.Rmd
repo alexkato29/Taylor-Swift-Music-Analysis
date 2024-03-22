@@ -1,0 +1,27 @@
+# Open Data
+
+```{r open-data}
+#install.packages("taylor")
+library(taylor)
+#data(package = "taylor")
+
+# Eras Tour Suprise
+head(eras_tour_surprise)
+colnames(eras_tour_surprise)
+
+# Songs
+head(taylor_album_songs)
+colnames(taylor_album_songs)
+
+# Albums and EPS
+head(taylor_albums)
+
+# All Songs
+head(taylor_all_songs)
+
+```
+
+```{r}
+colnames(eras_tour_surprise)
+```
+
