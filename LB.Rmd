@@ -1,0 +1,36 @@
+---
+title: "LB"
+output: html_document
+date: "2024-03-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#("taylor")
+#library(taylor)
+data(package = "taylor")
+```
+
+## Different Data Sets
+
+eras_tour_surprise  -->   The Eras Tour Surprise Songs
+taylor_album_songs  -->   Data for Taylor Swift songs
+taylor_albums  -->     Data for Taylor Swift's studio albums and EPs
+taylor_all_songs  -->   Data for Taylor Swift songs
+
+```{r}
+taylor_all_songs
+```
+
+
+
+
+
+
+
+
+
+
