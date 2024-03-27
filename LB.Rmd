@@ -18,6 +18,8 @@ library(taylor)
 library(compindexR)
 library(dplyr)
 library(stringr)
+library(ggplot2)
+library(cowplot)
 ```
 
 ## Different Data Sets
@@ -55,4 +57,49 @@ colnames(lyric_df) <- c("track_name", "lyrics")
 lyric_df
 
 ```
+```{r}
+taylor_all_songs
+```
+
+## Initial EDA
+```{r}
+## Notes: should add streams vs release plot, and streams vs some of these characteristics
+
+hist_1 <- taylor_all_songs %>%
+  ggplot(aes(x = danceability)) + geom_histogram(binwidth = 0.01, fill = "black", color = "white") +
+             labs(title = "Histogram of Danceability Values", x = "Danceability Values", y = "Frequency")
+
+hist_2 <- taylor_all_songs %>%
+  ggplot(aes(x = energy)) + geom_histogram(binwidth = 0.01, fill = "black", color = "white") +
+             labs(title = "Histogram of Energy Values", x = "Energy Values", y = "Frequency")
+
+hist_3 <- taylor_all_songs %>%
+  ggplot(aes(x = speechiness)) + geom_histogram(binwidth = 0.01, fill = "black", color = "white") +
+             labs(title = "Histogram of Speechiness Values", x = "Speechiness Values", y = "Frequency")
+
+hist_4 <- taylor_all_songs %>%
+  ggplot(aes(x = liveness)) + geom_histogram(binwidth = 0.01, fill = "black", color = "white") +
+             labs(title = "Histogram of Liveness Values", x = "Liveness Values", y = "Frequency")
+
+
+hist_5 <- taylor_all_songs %>%
+  ggplot(aes(x = valence)) + geom_histogram(binwidth = 0.01, fill = "black", color = "white") +
+             labs(title = "Histogram of Valence Values", x = "Valence Values", y = "Frequency")
+
+#hist_6 <- taylor_all_songs %>%
+ # ggplot(aes(x = as.integer(track_release))) + geom_histogram(binwidth = 0.01, fill = "black", color = "white") +
+  #           labs(title = "Histogram of Release Dates", x = "Release Dates", y = "Frequency")
+
+plot_grid(hist_1, hist_2, hist_3, hist_4, hist_5, nrow = 3)
+
+
+```
+
+
+
+
+
+
+
+
 
