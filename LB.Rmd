@@ -27,20 +27,14 @@ taylor_album_songs  -->   Data for Taylor Swift songs
 taylor_albums  -->     Data for Taylor Swift's studio albums and EPs
 taylor_all_songs  -->   Data for Taylor Swift songs
 
-
-
-```{r}
-taylor_all_songs[1, "track_name"]
-```
-
-
-
+## Lyric cleaning logic
 ```{r}
 df <- taylor_all_songs 
 n <- nrow(df)
 
 ## Creating lyric dataframe 
 lyric_matrix <- matrix(ncol = 2, nrow = n)
+
 for (i in 1:n){
   
   ## Getting song name
