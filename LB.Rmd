@@ -11,8 +11,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 #("taylor")
-#library(taylor)
-data(package = "taylor")
+library(taylor)
+#data(package = "taylor")
+
+#install.packages("compindexR")
+library(compindexR)
+library(dplyr)
+library(stringr)
 ```
 
 ## Different Data Sets
@@ -22,8 +27,38 @@ taylor_album_songs  -->   Data for Taylor Swift songs
 taylor_albums  -->     Data for Taylor Swift's studio albums and EPs
 taylor_all_songs  -->   Data for Taylor Swift songs
 
+
+
 ```{r}
-taylor_all_songs
+taylor_all_songs[1, "track_name"]
 ```
 
-changes 
+
+
+```{r}
+df <- taylor_all_songs 
+n <- nrow(df)
+
+## Creating lyric dataframe 
+lyric_matrix <- matrix(ncol = 2, nrow = n)
+for (i in 1:n){
+  
+  ## Getting song name
+  songName <- df[i, "track_name"]$track_name
+  
+  ## Getting lyrics
+  temp <- as.data.frame(taylor_all_songs[i,"lyrics"]$lyrics)
+  lyrics <- tolower(gsub("[^A-Za-z0-9 ]", "", paste(temp$lyric, collapse = " ")))
+  
+  ## Update lyric_df
+  lyric_matrix[i, 1] = songName
+  lyric_matrix[i, 2] = lyrics
+}
+
+## converting back to dataframe 
+lyric_df <- as.data.frame(lyric_matrix)
+colnames(lyric_df) <- c("track_name", "lyrics")
+lyric_df
+
+```
+
