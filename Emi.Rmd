@@ -2,26 +2,76 @@
 
 ```{r open-data}
 #install.packages("taylor")
-library(taylor)
+#library(taylor)
+#library(dplyr)
 #data(package = "taylor")
 
 # Eras Tour Suprise
 head(eras_tour_surprise)
 colnames(eras_tour_surprise)
+dim(eras_tour_surprise)
 
 # Songs
 head(taylor_album_songs)
 colnames(taylor_album_songs)
+dim(taylor_album_songs)
 
 # Albums and EPS
 head(taylor_albums)
+colnames(taylor_albums)
 
 # All Songs
 head(taylor_all_songs)
+colnames(taylor_all_songs)
 
+```
+
+
+# External Data Source
+
+```{r}
+external_data = read.csv("billboard_charts.csv")
+```
+
+# Merge Data 
+
+
+```{r}
+merged_data = merge(external_data, taylor_all_songs, by = "track_name", 
+                    all.y = TRUE)
 ```
 
 ```{r}
-colnames(eras_tour_surprise)
+# check that there are 230 tack names that are the same
+track_names_df1 <- external_data$track_name
+track_names_df2 <- taylor_all_songs$track_name
+common_tracks <- intersect(track_names_df1, track_names_df2)
+num_common_tracks <- length(common_tracks)
+print(num_common_tracks)
 ```
+
+```{r}
+# check for true before set NA vals to 0 in next chunk 
+#sum(is.na(merged_data$wks_on_chart)) == (nrow(taylor_all_songs) - nrow(external_data))
+```
+
+```{r}
+merged_data$wks_on_chart[is.na(merged_data$wks_on_chart)] = 0
+sum(merged_data$wks_on_chart == 0) == 95
+```
+
+```{r}
+sorted_tracks = merged_data %>%
+  select(track_name, wks_on_chart) %>% 
+  arrange(desc(wks_on_chart))
+
+sorted_tracks
+```
+
+
+
+
+
+
+
 
