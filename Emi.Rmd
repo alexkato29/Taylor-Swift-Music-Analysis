@@ -30,7 +30,7 @@ colnames(taylor_all_songs)
 # External Data Source
 
 ```{r}
-external_data = read.csv("billboard_charts.csv")
+external_data = read.csv("data/billboard_charts.csv")
 ```
 
 # Merge Data 
@@ -68,10 +68,27 @@ sorted_tracks = merged_data %>%
 sorted_tracks
 ```
 
+# Full Data Frame
+```{r}
+lyrics_df = read.csv("data/lyrics.csv")
+lyrics_df
+```
+
+```{r}
+# everything minus original lyrics 
+```
+
+```{r}
+merged_data <- merged_data[, -which(names(merged_data) == "lyrics")]
+merged_data
+```
 
 
-
-
+```{r}
+full = merge(merged_data, lyrics_df, by = "track_name", 
+                    all.y = TRUE)
+#write.csv(full, file = "full.csv", row.names = FALSE)
+```
 
 
 
