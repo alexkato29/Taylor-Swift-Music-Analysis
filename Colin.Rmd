@@ -1,4 +1,42 @@
-```{r}
 
-print("hello world")
+
+```{r open-data}
+#install.packages("taylor")
+library(taylor)
+#data(package = "taylor")
+
+# Eras Tour Suprise
+head(eras_tour_surprise)
+colnames(eras_tour_surprise)
+
+# Songs
+head(taylor_album_songs)
+colnames(taylor_album_songs)
+
+# Albums and EPS
+head(taylor_albums)
+
+# All Songs
+head(taylor_all_songs)
+
 ```
+
+```{r}
+colnames(eras_tour_surprise)
+```
+
+```{r}
+hist(taylor_album_songs$danceability)
+hist(taylor_album_songs$energy)
+hist(taylor_album_songs$loudness)
+
+```
+```{r}
+plot(taylor_album_songs$song_length, taylor_album_songs$stream_count,
+     main="Song Length vs. Stream Count",
+     xlab="Song Length (seconds)",
+     ylab="Stream Count",
+     pch=19)
+
+```
+
