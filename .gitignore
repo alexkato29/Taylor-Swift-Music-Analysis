@@ -6,3 +6,5 @@ sta440-case2.Rproj
 secrets.txt
 
 data/mp3s/
+
+venv/
