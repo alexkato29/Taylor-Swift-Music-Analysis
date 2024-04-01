@@ -1,4 +1,10 @@
 
+```{r}
+library(tidyr)
+library(dplyr)
+```
+
+
 
 ```{r open-data}
 #install.packages("taylor")
@@ -31,12 +37,103 @@ hist(taylor_album_songs$energy)
 hist(taylor_album_songs$loudness)
 
 ```
+
 ```{r}
-plot(taylor_album_songs$song_length, taylor_album_songs$stream_count,
-     main="Song Length vs. Stream Count",
-     xlab="Song Length (seconds)",
-     ylab="Stream Count",
-     pch=19)
+external_data = read.csv("billboard_charts.csv")
+
+merged_data = merge(external_data, taylor_all_songs, by = "track_name", 
+                    all.y = TRUE)
+```
+
+```{r}
+track_names_df1 <- external_data$track_name
+track_names_df2 <- taylor_all_songs$track_name
+common_tracks <- intersect(track_names_df1, track_names_df2)
+num_common_tracks <- length(common_tracks)
+print(num_common_tracks)
+```
+
+```{r}
+sorted_tracks = merged_data %>%
+  select(track_name, wks_on_chart) %>% 
+  arrange(desc(wks_on_chart))
+sorted_tracks
+```
+
+```{r}
+summary(sorted_tracks$wks_on_chart)
+
+hist(sorted_tracks$wks_on_chart,
+     main="Distribution of Weeks on Billboard Top 100",
+     xlab="Weeks on Chart",
+     col="blue")
+
+boxplot(sorted_tracks$wks_on_chart,
+        main="Boxplot of Weeks on Billboard Top 100",
+        ylab="Weeks on Chart",
+        col="lightgreen")
+```
+
+
+```{r}
+lyrics_df = read.csv("lyrics.csv")
+lyrics_df
+```
+
+```{r}
+merged_data <- merged_data[, -which(names(merged_data) == "lyrics")]
+merged_data
+```
+
+
+```{r}
+plot(merged_data$danceability, merged_data$wks_on_chart,
+     main="Danceability vs. Weeks on Chart",
+     xlab="Danceability",
+     ylab="Weeks on Chart")
+
+plot(merged_data$energy, merged_data$wks_on_chart,
+     main="Energy vs. Weeks on Chart",
+     xlab="Energy",
+     ylab="Weeks on Chart")
+
+plot(merged_data$loudness, merged_data$wks_on_chart,
+     main="Loudness vs. Weeks on Chart",
+     xlab="Loudness",
+     ylab="Weeks on Chart")
+
+plot(merged_data$speechiness, merged_data$wks_on_chart,
+     main="Speechiness vs. Weeks on Chart",
+     xlab="Speechiness",
+     ylab="Weeks on Chart")
+
+
+plot(merged_data$acousticness, merged_data$wks_on_chart,
+     main="Acousticness vs. Weeks on Chart",
+     xlab="Acousticness",
+     ylab="Weeks on Chart")
+
+plot(merged_data$liveness, merged_data$wks_on_chart,
+     main="Liveness vs. Weeks on Chart",
+     xlab="Liveness",
+     ylab="Weeks on Chart")
+
+plot(merged_data$valence, merged_data$wks_on_chart,
+     main="Valence vs. Weeks on Chart",
+     xlab="Valence",
+     ylab="Weeks on Chart")
+
+plot(merged_data$tempo, merged_data$wks_on_chart,
+     main="Tempo vs. Weeks on Chart",
+     xlab="Tempo",
+     ylab="Weeks on Chart")
+
+plot(merged_data$duration_ms, merged_data$wks_on_chart,
+     main="Duration vs. Weeks on Chart",
+     xlab="Duration",
+     ylab="Weeks on Chart")
 
 ```
+
+
 
