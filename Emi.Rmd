@@ -115,12 +115,17 @@ model_df$album_name = as.factor(model_df$album_name)
 ```{r}
 #library(ggplot2)
 #library(gridExtra)
-baseline = ggplot(data = model_df, aes(x = wks_on_chart)) + 
-  geom_histogram(binwidth = 1) +
-  labs(title = "Baseline Wks On Chart")
-
 wks_range <- range(model_df$wks_on_chart, na.rm = TRUE)
 lyr_cluster_range <- range(lyrics_cluster_df$cluster_assignment, na.rm = TRUE)
+
+baseline = ggplot(data = model_df, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) +
+  labs(title = "Baseline Wks On Chart") +
+  scale_x_continuous(limits = wks_range) + 
+  geom_vline(xintercept = mean_val, color="blue", linetype="dashed", size=1) +
+  geom_vline(xintercept = median_val, color="red", linetype="dotted", size=1) 
+
+
 
 hist_list <- list(baseline)
 for (i in 0:13) {
@@ -129,7 +134,7 @@ for (i in 0:13) {
     ggplot(data = cluster_data, aes(x = wks_on_chart)) +
     geom_histogram(binwidth = 1) + 
     labs(title = paste("Hist", i)) +
-    scale_x_continuous(limits = wks_range) 
+    scale_x_continuous(limits = wks_range)
 
 }
 
@@ -138,11 +143,61 @@ sum(sapply(hist_list, function(x) nrow(x$data))) == nrow(model_df)
 
 # plot
 do.call(grid.arrange, c(hist_list, ncol = 5))
-
-#pop: 1, 2, 5, 6, 8, 9, 12, 13
-#base: 1, 4, 5, 10, 11, 
-#unpop: 0, 3, 7
 ```
+
+```{r}
+library(ggplot2)
+
+for (i in 0:13) {
+  cluster_data <- subset(model_df, lyric_cluster == i)
+  
+  # Calculate the square root of 'wks_on_chart' since you're plotting that
+  sqrt_wks_on_chart <- sqrt(cluster_data$wks_on_chart)
+  
+  # Calculate mean and median of the transformed data
+  mean_val <- mean(sqrt_wks_on_chart, na.rm = TRUE)
+  median_val <- median(sqrt_wks_on_chart, na.rm = TRUE)
+  
+  # Add the histograms to the list
+  hist_list[[i + 2]] <- 
+    ggplot(data = cluster_data, aes(x = sqrt(wks_on_chart))) +
+    geom_histogram(binwidth = 1) + 
+    geom_vline(xintercept = mean_val, color="blue", linetype="dashed", size=1) +
+    geom_vline(xintercept = median_val, color="red", linetype="dotted", size=1) +
+    labs(title = paste("Hist", i)) +
+    scale_x_continuous(limits = wks_range) +
+    theme_minimal() +
+    labs(x = "Sqrt(Wks on Chart)", y = "Frequency") 
+}
+
+
+do.call(grid.arrange, c(hist_list, ncol = 5))
+baseline
+```
+
+```{r}
+# Assuming model_df is your original data frame
+results_df <- data.frame(cluster = integer(), mean = numeric(), median = numeric())
+
+for (i in 0:13) {
+  cluster_data <- subset(model_df, lyric_cluster == i)
+  mean_val <- mean(cluster_data$wks_on_chart, na.rm = TRUE)
+  median_val <- median(cluster_data$wks_on_chart, na.rm = TRUE)
+  
+  # Append the results for this cluster to the results dataframe
+  results_df <- rbind(results_df, data.frame(cluster = i, mean = mean_val, median = median_val))
+}
+
+# baseline
+results_df <- rbind(results_df, data.frame(cluster = "base" , mean = mean(model_df$wks_on_chart, na.rm = TRUE), median = median(model_df$wks_on_chart, na.rm = TRUE)))
+# View the results
+print(results_df)
+
+# pop: 1, 6, 8, 10*, 12
+# base: 2, 4, 5, 9, 11
+# unpop: 0*, 3, 7, 13
+```
+
 
 ```{r}
 # recategorize lyric cluster
@@ -150,9 +205,9 @@ library(dplyr)
 
 model_df <- model_df %>%
   mutate(lyric_cluster_pop_ = case_when(
-    lyric_cluster %in% c(1, 2, 5, 6, 8, 9, 12, 13) ~ 'more_pop',
-    lyric_cluster %in% c(1, 4, 5, 10, 11) ~ 'base_pop',
-    lyric_cluster %in% c(0, 3, 7) ~ 'less_pop'
+    lyric_cluster %in% c(1, 6, 8, 10, 12) ~ 'more_pop',
+    lyric_cluster %in% c(2, 4, 5, 9, 11) ~ 'base_pop',
+    lyric_cluster %in% c(0, 3, 7, 13) ~ 'less_pop'
   ))
 
 ```
@@ -161,7 +216,7 @@ model_df <- model_df %>%
 
 ```{r}
 audio_cluster_range <- range(audio_cluster_df$cluster_assignment, na.rm = TRUE)
-
+audio_cluster_range
 hist_list_a <- list(baseline)
 for (i in 0:14) {
   cluster_data <- subset(model_df, audio_cluster == i)
@@ -185,13 +240,36 @@ do.call(grid.arrange, c(hist_list_a, ncol = 4))
 ```
 
 ```{r}
+results_df_a <- data.frame(cluster = integer(), mean = numeric(), median = numeric())
+
+for (i in 0:14) {
+  cluster_data <- subset(model_df, audio_cluster == i)
+  mean_val <- mean(cluster_data$wks_on_chart, na.rm = TRUE)
+  median_val <- median(cluster_data$wks_on_chart, na.rm = TRUE)
+  
+  # Append the results for this cluster to the results dataframe
+  results_df_a <- rbind(results_df_a, data.frame(cluster = i, mean = mean_val, median = median_val))
+}
+
+# baseline
+results_df_a <- rbind(results_df_a, data.frame(cluster = "base" , mean = mean(model_df$wks_on_chart, na.rm = TRUE), median = median(model_df$wks_on_chart, na.rm = TRUE)))
+# View the results
+print(results_df_a)
+
+# pop: 1, 3, 8*, 14
+# base: 4, 7, 11, 9, 12,
+# unpop: 0, 2*, 5, 6, 10, 13, 
+```
+
+
+```{r}
 # recategorize lyric cluster
 
 model_df <- model_df %>%
   mutate(audio_cluster_pop_ = case_when(
-    audio_cluster %in% c(1, 2, 3, 14) ~ 'more_pop',
-    audio_cluster %in% c(0, 4, 6, 7, 8, 10, 12) ~ 'base_pop',
-    audio_cluster %in% c(5, 9, 11, 13) ~ 'less_pop'
+    audio_cluster %in% c(1, 3, 8, 14) ~ 'more_pop',
+    audio_cluster %in% c(4, 7, 11, 9, 12) ~ 'base_pop',
+    audio_cluster %in% c(0, 2, 5, 6, 10, 13) ~ 'less_pop'
   ))
 
 ```
@@ -226,9 +304,17 @@ model_df <- model_df %>%
 ```
 
 ```{r}
+# TV
 model_df <- model_df %>%
   mutate(TV = grepl("\\(Taylor's Version\\)", track_name))
 model_df
+
+model_df
+# from the vault 
+model_df <- model_df %>%
+  mutate(vault = grepl("\\[From The Vault\\]", track_name))
+model_df
+
 
 # check that the number of TV songs is 100
 nrow(subset(model_df, TV == TRUE)) == 100
@@ -242,9 +328,29 @@ nrow(subset(model_df, TV == TRUE)) == 100
 #library(MASS)
 model <- glm(wks_on_chart ~ danceability + energy + speechiness + acousticness + 
                liveness + valence + tempo + lyric_cluster_pop_ + 
+               audio_cluster_pop_ + album_group_ + TV + vault,
+             data = model_df, family = poisson(link = "log"))
+summary(model)
+```
+
+```{r}
+exp_coef <- exp(coef(model))
+print(exp_coef)
+model_df$speechiness
+```
+
+```{r}
+model <- glm(wks_on_chart ~ lyric_cluster_pop_ + 
                audio_cluster_pop_ + album_group_ + TV,
              data = model_df, family = poisson(link = "log"))
 summary(model)
 ```
 
+```{r}
+t_tv = subset(model_df, TV == TRUE)
+hist(t_tv$wks_on_chart)
+
+f_tv = subset(model_df, TV == FALSE)
+hist(f_tv$wks_on_chart)
+```
 
