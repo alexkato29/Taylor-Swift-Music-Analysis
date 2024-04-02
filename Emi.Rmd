@@ -87,8 +87,179 @@ merged_data
 ```{r}
 full = merge(merged_data, lyrics_df, by = "track_name", 
                     all.y = TRUE)
+full$album_name[is.na(full$album_name)] = "no_album"
 #write.csv(full, file = "full.csv", row.names = FALSE)
 ```
 
+# Poisson Regression 
+
+```{r}
+# load lyrics cluster 
+lyrics_cluster_df = read.csv("data/lyrics.csv")
+
+model_df = full
+model_df$lyric_cluster = as.factor(lyrics_cluster_df$cluster_assignment)
+model_df$album_name = as.factor(model_df$album_name)
+
+# popular clusters: 2, 5, 8, 11, 12, 13
+# unpopular: 14
+# similar to baseline popularity: 0, 1, 3, 4, 6, 7, 9, 10
+```
+
+## Cluster Categories 
+```{r}
+#library(ggplot2)
+baseline = ggplot(data = model_df, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+baseline
+# categories
+zero = subset(model_df, lyric_cluster == 0)
+one = subset(model_df, lyric_cluster == 1)
+two = subset(model_df, lyric_cluster == 2)
+three = subset(model_df, lyric_cluster == 3)
+four = subset(model_df, lyric_cluster == 4)
+five = subset(model_df, lyric_cluster == 5)
+six = subset(model_df, lyric_cluster == 6)
+seven = subset(model_df, lyric_cluster == 7)
+eight = subset(model_df, lyric_cluster == 8)
+nine = subset(model_df, lyric_cluster == 9)
+ten = subset(model_df, lyric_cluster == 10)
+eleven = subset(model_df, lyric_cluster == 11)
+twelve = subset(model_df, lyric_cluster == 12)
+thirteen = subset(model_df, lyric_cluster == 13)
+#fourteen = subset(model_df, lyric_cluster == 14)
+# check
+(nrow(zero) + nrow(one) + nrow(two) + nrow(three) + nrow(four) + nrow(five) + 
+    nrow(six) + nrow(seven) + nrow(eight) + nrow(nine) + nrow(ten) +
+    nrow(eleven) + nrow(twelve) + nrow(thirteen) + nrow(fourteen)) == 
+  nrow(model_df)
+
+# histogram build
+zero_hist = ggplot(data = zero, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+one_hist = ggplot(data = one, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+two_hist = ggplot(data = two, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+three_hist = ggplot(data = three, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+four_hist = ggplot(data = four, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+five_hist = ggplot(data = five, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+six_hist = ggplot(data = six, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+seven_hist = ggplot(data = seven, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+eight_hist = ggplot(data = eight, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+nine_hist = ggplot(data = nine, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+ten_hist = ggplot(data = ten, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+eleven_hist = ggplot(data = eleven, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+twelve_hist = ggplot(data = twelve, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+thirteen_hist = ggplot(data = thirteen, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) 
+#fourteen_hist = ggplot(data = fourteen, aes(x = wks_on_chart)) + 
+  #geom_histogram(binwidth = 1) 
+
+# plot histograms
+#library(gridExtra)
+
+grid.arrange(baseline, zero_hist, one_hist, two_hist, three_hist, four_hist, 
+             five_hist, six_hist, seven_hist, eight_hist, nine_hist, ten_hist, 
+             eleven_hist, twelve_hist, thirteen_hist, ncol=4)
+# check wks on chart
+nrow(subset(model_df, wks_on_chart == 0)) + 
+  nrow(subset(model_df, wks_on_chart != 0)) == 327
+
+
+# categories 
+## unpop: 0
+## pop: 1
+```
+```{r}
+#library(ggplot2)
+#library(gridExtra)
+wks_range <- range(model_df$wks_on_chart, na.rm = TRUE)
+
+hist_list <- list()
+for (i in 0:13) {
+  cluster_data <- subset(model_df, lyric_cluster == i)
+  hist_list[[i + 1]] <- 
+    ggplot(data = cluster_data, aes(x = wks_on_chart)) +
+    geom_histogram(binwidth = 1) + 
+    labs(title = paste("Histogram", i)) 
+    #scale_x_continuous(limits = wks_range)
+}
+
+# check 
+sum(sapply(hist_list, function(x) nrow(x$data))) == nrow(model_df)
+
+# plot
+do.call(grid.arrange, c(hist_list, ncol = 5))
+
+#pop: 1, 2, 6, 8
+#base: 4, 5, 7, 9, 10, 12
+#unpop: 3, 11, 13
+```
+
+
+```{r}
+# recategorize lyric cluster
+library(dplyr)
+
+model_df <- model_df %>%
+  mutate(lyric_cluster_popularity_group = case_when(
+    lyric_cluster %in% c(1, 2, 6, 8) ~ 'pop',
+    lyric_cluster %in% c(4, 5, 7, 9, 10, 12) ~ 'base',
+    lyric_cluster %in% c(3, 11, 13) ~ 'unpop'
+  ))
+
+```
+
+## Album Grouping
+
+```{r}
+albums = unique(model_df$album_name)
+
+early = c("Taylor Swift", "Beautiful Eyes", "Fearless", 
+          "Fearless (Taylor's Version)", "Speak Now", 
+          "Speak Now (Taylor's Version)")
+middle1 = c("Red", "Red (Taylor's Version)", "1989", "1989 (Taylor's Version)")
+middle2 = c("reputation", "Lover")
+later = c("folklore", "evermore", "Midnights")
+misc = c("The Taylor Swift Holiday Collection", "no_album")
+# check
+(length(early) + length(middle1) + length(middle2) + length(later) + 
+    length(misc)) == 17
+
+# Add a new column to model_df with the album groupings
+model_df <- model_df %>%
+  mutate(album_group_ = case_when(
+    album_name %in% early ~ "early",
+    album_name %in% middle1 ~ "middle1",
+    album_name %in% middle2 ~ "middle2",
+    album_name %in% later ~ "later",
+    album_name %in% misc ~ "misc"
+  ))
+
+
+```
+
+
+## Model
+
+```{r}
+#install.packages("MASS")
+#library(MASS)
+model <- glm(wks_on_chart ~ danceability + energy + speechiness + acousticness + 
+               liveness + valence + tempo + lyric_cluster_popularity_group + 
+               album_group_, data = model_df, family = poisson(link = "log"))
+summary(model)
+```
 
 
