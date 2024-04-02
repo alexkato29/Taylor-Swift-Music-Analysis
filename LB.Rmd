@@ -96,6 +96,118 @@ plot_grid(hist_1, hist_2, hist_3, hist_4, hist_5, nrow = 3)
 ```
 
 
+## Cluster EDA
+
+```{r}
+##Audio Cluster Read-in
+audio_cluster <- read.csv("data/audio.csv")
+audio_cluster <- audio_cluster %>%
+  dplyr::mutate(audio_cluster_assignment = cluster_assignment) %>%
+  dplyr::select(track_name, audio_cluster_assignment)
+
+#Lyric Cluster Read-in
+lyrics_cluster <- read.csv("data/lyrics.csv")
+lyrics_cluster <- lyrics_cluster %>%
+  dplyr::mutate(lyrics_cluster_assignment = cluster_assignment) %>%
+  dplyr::select(track_name, lyrics_cluster_assignment)
+
+##Join with taylor_all_songs
+all_cluster_data_df <- taylor_all_songs %>%
+  inner_join(audio_cluster, by = "track_name") %>%
+  inner_join(lyrics_cluster, by = "track_name")
+all_cluster_data_df
+```
+
+## EDA with all clusters
+
+
+```{r}
+all_cluster_data_df %>%
+  ggplot(aes(x = audio_cluster_assignment, y = lyrics_cluster_assignment)) + 
+  geom_point() + 
+  labs(x = "Audio Cluster Assignment", y = "Lyrics Cluster Assignment")
+```
+
+```{r}
+all_cluster_data_df %>%
+  ggplot(aes(x = audio_cluster_assignment, y = speechiness)) + 
+  geom_bar(stat = "identity") + 
+  labs(x = "Audio Cluster Assignment", y = "Speechiness")
+
+all_cluster_data_df %>%
+  ggplot(aes(x = lyrics_cluster_assignment, y = speechiness)) + 
+  geom_bar(stat = "identity") + 
+  labs(x = "Lyrics Cluster Assignment", y = "Speechiness")
+```
+
+
+```{r}
+all_cluster_data_df %>%
+  ggplot(aes(x = audio_cluster_assignment, y = acousticness)) + 
+  geom_bar(stat = "identity") + 
+  labs(x = "Audio Cluster Assignment", y = "Acousticness")
+
+all_cluster_data_df %>%
+  ggplot(aes(x = lyrics_cluster_assignment, y = acousticness)) + 
+  geom_bar(stat = "identity") + 
+  labs(x = "Lyrics Cluster Assignment", y = "Acousticness")
+```
+
+```{r}
+all_cluster_data_df %>%
+  ggplot(aes(x = audio_cluster_assignment, y = as.Date(track_release))) + 
+  geom_bar(stat = "identity") + 
+  labs(x = "Audio Cluster Assignment", y = "track_release")
+
+all_cluster_data_df %>%
+  ggplot(aes(x = lyrics_cluster_assignment, y = acousticness)) + 
+  geom_bar(stat = "identity") + 
+  labs(x = "Lyrics Cluster Assignment", y = "Acousticness")
+```
+
+##EDA for specific audio clusters
+
+```{r}
+audio_cluster = 1
+all_cluster_data_df_audio_cluster_specific <- all_cluster_data_df %>%
+  filter(audio_cluster_assignment == audio_cluster)
+```
+
+
+
+
+
+##EDA for specific lyrics clusters
+
+```{r}
+lyrics_cluster = 1
+all_cluster_data_df_lyrcis_cluster_specific <- all_cluster_data_df %>%
+  filter(lyrics_cluster_assignment == lyrics_cluster)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
