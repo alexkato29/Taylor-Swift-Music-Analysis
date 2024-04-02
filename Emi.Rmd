@@ -87,8 +87,164 @@ merged_data
 ```{r}
 full = merge(merged_data, lyrics_df, by = "track_name", 
                     all.y = TRUE)
+full$album_name[is.na(full$album_name)] = "no_album"
 #write.csv(full, file = "full.csv", row.names = FALSE)
 ```
 
+# Poisson Regression 
+
+
+```{r}
+# load lyrics cluster 
+lyrics_cluster_df = read.csv("data/lyrics.csv")
+max(lyrics_cluster_df$cluster_assignment)
+
+# load audio cluster 
+audio_cluster_df = read.csv("data/audio.csv")
+max(audio_cluster_df$cluster_assignment)
+
+# combine data
+model_df = full
+model_df$lyric_cluster = as.factor(lyrics_cluster_df$cluster_assignment)
+model_df$audio_cluster = as.factor(audio_cluster_df$cluster_assignment)
+model_df$album_name = as.factor(model_df$album_name)
+```
+
+## Lyrics Cluster Categories 
+
+```{r}
+#library(ggplot2)
+#library(gridExtra)
+baseline = ggplot(data = model_df, aes(x = wks_on_chart)) + 
+  geom_histogram(binwidth = 1) +
+  labs(title = "Baseline Wks On Chart")
+
+wks_range <- range(model_df$wks_on_chart, na.rm = TRUE)
+lyr_cluster_range <- range(lyrics_cluster_df$cluster_assignment, na.rm = TRUE)
+
+hist_list <- list(baseline)
+for (i in 0:13) {
+  cluster_data <- subset(model_df, lyric_cluster == i)
+  hist_list[[i + 2]] <- 
+    ggplot(data = cluster_data, aes(x = wks_on_chart)) +
+    geom_histogram(binwidth = 1) + 
+    labs(title = paste("Hist", i)) +
+    scale_x_continuous(limits = wks_range) 
+
+}
+
+# check 
+sum(sapply(hist_list, function(x) nrow(x$data))) == nrow(model_df)
+
+# plot
+do.call(grid.arrange, c(hist_list, ncol = 5))
+
+#pop: 1, 2, 5, 6, 8, 9, 12, 13
+#base: 1, 4, 5, 10, 11, 
+#unpop: 0, 3, 7
+```
+
+```{r}
+# recategorize lyric cluster
+library(dplyr)
+
+model_df <- model_df %>%
+  mutate(lyric_cluster_pop_ = case_when(
+    lyric_cluster %in% c(1, 2, 5, 6, 8, 9, 12, 13) ~ 'more_pop',
+    lyric_cluster %in% c(1, 4, 5, 10, 11) ~ 'base_pop',
+    lyric_cluster %in% c(0, 3, 7) ~ 'less_pop'
+  ))
+
+```
+
+## Audio Cluster Category  
+
+```{r}
+audio_cluster_range <- range(audio_cluster_df$cluster_assignment, na.rm = TRUE)
+
+hist_list_a <- list(baseline)
+for (i in 0:14) {
+  cluster_data <- subset(model_df, audio_cluster == i)
+  hist_list_a[[i + 2]] <- 
+    ggplot(data = cluster_data, aes(x = wks_on_chart)) +
+    geom_histogram(binwidth = 1) + 
+    labs(title = paste("Hist", i)) +
+    scale_x_continuous(limits = wks_range) 
+
+}
+
+# check 
+sum(sapply(hist_list_a, function(x) nrow(x$data))) == nrow(model_df)
+
+# plot
+do.call(grid.arrange, c(hist_list_a, ncol = 4))
+
+#pop: 1, 2, 3, 14
+#base: 0, 4, 6, 7, 8, 10, 12
+#unpop: 5, 9, 11, 13
+```
+
+```{r}
+# recategorize lyric cluster
+
+model_df <- model_df %>%
+  mutate(audio_cluster_pop_ = case_when(
+    audio_cluster %in% c(1, 2, 3, 14) ~ 'more_pop',
+    audio_cluster %in% c(0, 4, 6, 7, 8, 10, 12) ~ 'base_pop',
+    audio_cluster %in% c(5, 9, 11, 13) ~ 'less_pop'
+  ))
+
+```
+
+## Album Grouping
+
+```{r}
+albums = unique(model_df$album_name)
+
+early = c("Taylor Swift", "Beautiful Eyes", "Fearless", 
+          "Fearless (Taylor's Version)", "Speak Now", 
+          "Speak Now (Taylor's Version)")
+middle1 = c("Red", "Red (Taylor's Version)", "1989", "1989 (Taylor's Version)")
+middle2 = c("reputation", "Lover")
+later = c("folklore", "evermore", "Midnights")
+misc = c("The Taylor Swift Holiday Collection", "no_album")
+# check
+(length(early) + length(middle1) + length(middle2) + length(later) + 
+    length(misc)) == 17
+
+# Add a new column to model_df with the album groupings
+model_df <- model_df %>%
+  mutate(album_group_ = case_when(
+    album_name %in% early ~ "early",
+    album_name %in% middle1 ~ "middle1",
+    album_name %in% middle2 ~ "middle2",
+    album_name %in% later ~ "later",
+    album_name %in% misc ~ "misc"
+  ))
+
+
+```
+
+```{r}
+model_df <- model_df %>%
+  mutate(TV = grepl("\\(Taylor's Version\\)", track_name))
+model_df
+
+# check that the number of TV songs is 100
+nrow(subset(model_df, TV == TRUE)) == 100
+
+```
+
+## Model
+
+```{r}
+#install.packages("MASS")
+#library(MASS)
+model <- glm(wks_on_chart ~ danceability + energy + speechiness + acousticness + 
+               liveness + valence + tempo + lyric_cluster_pop_ + 
+               audio_cluster_pop_ + album_group_ + TV,
+             data = model_df, family = poisson(link = "log"))
+summary(model)
+```
 
 
