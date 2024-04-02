@@ -177,7 +177,6 @@ all_cluster_data_df_audio_cluster_specific <- all_cluster_data_df %>%
 
 
 
-
 ##EDA for specific lyrics clusters
 
 ```{r}
@@ -187,30 +186,6 @@ all_cluster_data_df_lyrcis_cluster_specific <- all_cluster_data_df %>%
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-=======
->>>>>>> 90a952214d465ca92222cca7e820d60dc4ea0774
 
 
 
