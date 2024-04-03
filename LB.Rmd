@@ -96,6 +96,19 @@ plot_grid(hist_1, hist_2, hist_3, hist_4, hist_5, nrow = 3)
 ```
 
 
+
+
+```{r}
+full_cluster <- read.csv("data/full.csv")
+
+```
+
+
+
+
+
+
+
 <<<<<<< HEAD
 ## Cluster EDA
 
@@ -113,10 +126,12 @@ lyrics_cluster <- lyrics_cluster %>%
   dplyr::select(track_name, lyrics_cluster_assignment)
 
 ##Join with taylor_all_songs
-all_cluster_data_df <- taylor_all_songs %>%
+all_cluster_data_df <- full_cluster %>%
   inner_join(audio_cluster, by = "track_name") %>%
   inner_join(lyrics_cluster, by = "track_name")
-all_cluster_data_df
+
+
+all_cluster_data_df 
 ```
 
 ## EDA with all clusters Big Picture
@@ -155,10 +170,14 @@ all_cluster_data_df %>%
 ```
 
 ```{r}
+
+all_cluster_data_df$track_release <- as.Date(all_cluster_data_df$track_release, origin = "1970-01-01")
+
 all_cluster_data_df %>%
-  ggplot(aes(x = audio_cluster_assignment, y = as.Date(track_release))) + 
+  ggplot(aes(x = audio_cluster_assignment, y = track_release)) + 
   geom_bar(stat = "identity") + 
   labs(x = "Audio Cluster Assignment", y = "track_release")
+
 
 all_cluster_data_df %>%
   ggplot(aes(x = lyrics_cluster_assignment, y = acousticness)) + 
@@ -174,7 +193,7 @@ all_cluster_data_df_audio_cluster_specific <- all_cluster_data_df %>%
   filter(audio_cluster_assignment == audio_cluster)
 
 all_cluster_data_df_audio_cluster_specific_cut <- all_cluster_data_df_audio_cluster_specific %>%
-  dplyr::select(-album_name, -ep, -album_release, -track_number, -track_name, -artist, -featuring, -bonus_track, -promotional_release, -single_release, -track_release, -mode, -time_signature, -explicit, -key_name, -mode_name, -key_mode, -lyrics, -lyrics_cluster_assignment, -audio_cluster_assignment)
+  dplyr::select(-album_name, -ep, -album_release, -track_number, -track_name, -artist, -featuring, -bonus_track, -promotional_release, -single_release, -track_release, -mode, -time_signature, -explicit, -key_name, -mode_name, -key_mode, -lyrics, -lyrics_cluster_assignment, -audio_cluster_assignment, -streak)
 
 df1 <- all_cluster_data_df_audio_cluster_specific_cut
 
@@ -187,8 +206,18 @@ for (col_name in colnames(df1)) {
     labs(title = "Histogram", x = col_name, y = "Frequency")
   print(plot)
 }
+
+ggplot(all_cluster_data_df_audio_cluster_specific, aes(y = album_name)) + 
+    geom_bar(fill = "black", color = "white") +
+    labs(title = "Histogram", y = "Album Name", x = "Frequency")
+
+
+
 print(nrow(df1))
 ```
+
+
+
 
 
 
@@ -200,7 +229,7 @@ all_cluster_data_df_lyrcis_cluster_specific <- all_cluster_data_df %>%
   filter(lyrics_cluster_assignment == lyrics_cluster)
 
 all_cluster_data_df_lyrics_cluster_specific_cut <- all_cluster_data_df_lyrcis_cluster_specific %>%
-  dplyr::select(-album_name, -ep, -album_release, -track_number, -track_name, -artist, -featuring, -bonus_track, -promotional_release, -single_release, -track_release, -mode, -time_signature, -explicit, -key_name, -mode_name, -key_mode, -lyrics, -audio_cluster_assignment, -lyrics_cluster_assignment)
+  dplyr::select(-album_name, -ep, -album_release, -track_number, -track_name, -artist, -featuring, -bonus_track, -promotional_release, -single_release, -track_release, -mode, -time_signature, -explicit, -key_name, -mode_name, -key_mode, -lyrics, -audio_cluster_assignment, -lyrics_cluster_assignment, -streak)
 
 df2 <- all_cluster_data_df_lyrics_cluster_specific_cut
 
@@ -214,6 +243,8 @@ for (col_name in colnames(df2)) {
   print(plot)
 }
 print(ncol(df2))
+
+
 ```
 
 
@@ -228,7 +259,7 @@ target_column = "speechiness"
 
 ##data cleaning
 all_cluster_data_df_specific_cut <- all_cluster_data_df %>%
-  dplyr::select(-album_name, -ep, -album_release, -track_number, -track_name, -artist, -featuring, -bonus_track, -promotional_release, -single_release, -track_release, -mode, -time_signature, -explicit, -key_name, -mode_name, -key_mode, -lyrics)
+  dplyr::select(-ep, -album_release, -track_number, -track_name, -artist, -featuring, -bonus_track, -promotional_release, -single_release, -track_release, -mode, -time_signature, -explicit, -key_name, -mode_name, -key_mode, -lyrics, -streak)
 
 ```
 
@@ -247,7 +278,30 @@ for (i in 0:14){
   print(plot2)
 }
 
+
 ```
+
+
+
+
+
+```{r}
+## for audio clusters album_name
+for (i in 0:14){
+  temp_df <- all_cluster_data_df_specific_cut %>%
+    filter(audio_cluster_assignment == i)
+  
+  t <- temp_df["album_name"]
+  
+  plot2 <- ggplot(temp_df["album_name"], aes(y = t[[1]])) + 
+    geom_bar(fill = "black", color = "white") +
+    labs(title = "Histogram", y = "Album Name", x = "Frequency")
+
+  print(plot2)
+}
+```
+
+
 
 
 ```{r}
@@ -267,7 +321,21 @@ for (i in 0:14){
 
 ```
 
+```{r}
+## for lyrics clusters album_name
+for (i in 0:14){
+  temp_df <- all_cluster_data_df_specific_cut %>%
+    filter(lyrics_cluster_assignment == i)
+  
+  t <- temp_df["album_name"]
+  
+  plot2 <- ggplot(temp_df["album_name"], aes(y = t[[1]])) + 
+    geom_bar(fill = "black", color = "white") +
+    labs(title = "Histogram", y = "Album Name", x = "Frequency")
 
+  print(plot2)
+}
+```
 
 
 
