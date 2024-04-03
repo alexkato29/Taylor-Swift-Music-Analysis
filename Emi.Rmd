@@ -341,6 +341,15 @@ summary(model)
 ```
 
 ```{r}
+model_2 <- glm(wks_on_chart ~ danceability + energy + speechiness + acousticness + 
+               liveness + valence + tempo  + 
+               audio_cluster + lyric_cluster + album_group_ + TV + vault,
+             data = model_df, family = poisson(link = "log"))
+summary(model_2)
+```
+
+
+```{r}
 exp_coef <- exp(coef(model))
 print(exp_coef)
 model_df$speechiness
@@ -379,8 +388,8 @@ model_df$sqrt_weeks_on_chart <- sqrt(model_df$wks_on_chart)
 
 library(ggplot2)
 
-ggplot(model_df, aes(x = sqrt_weeks_on_chart, fill = audio_cluster_pop_)) +
-  geom_histogram(position = "fill", binwidth = 1) +  # This stacks the bar and scales it to fill 100% of the y-axis proportionally
+ggplot(model_df, aes(x = album_name, fill = audio_cluster_pop_)) +
+  geom_bar(position = "fill") +  # This stacks the bar and scales it to fill 100% of the y-axis proportionally
   scale_y_continuous(labels = scales::percent) +  # Adjust y-axis to show percentage
   labs(title = "Histogram of Square Root of Weeks on Chart",
        x = "Square Root of Weeks on Chart (Binned)",
@@ -388,7 +397,8 @@ ggplot(model_df, aes(x = sqrt_weeks_on_chart, fill = audio_cluster_pop_)) +
   theme_minimal() +
   guides(fill = guide_legend(title = "Audio Cluster Pop")) + 
   theme_minimal() + 
-  scale_fill_manual(values = c("more_pop" = "darkgreen", "base_pop" = "#339999", "less_pop" = "lightgreen"))
+  scale_fill_manual(values = c("more_pop" = "darkgreen", "base_pop" = "#339999", "less_pop" = "lightgreen")) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
 
 
 ```
