@@ -304,6 +304,13 @@ model_df <- model_df %>%
 ```
 
 ```{r}
+model_df$audio_cluster_pop_ = as.factor(model_df$audio_cluster_pop_)
+model_df$lyric_cluster_pop_ = as.factor(model_df$lyric_cluster_pop_)
+model_df$album_group_ = as.factor(model_df$album_group_)
+```
+
+
+```{r}
 # TV
 model_df <- model_df %>%
   mutate(TV = grepl("\\(Taylor's Version\\)", track_name))
@@ -352,5 +359,50 @@ hist(t_tv$wks_on_chart)
 
 f_tv = subset(model_df, TV == FALSE)
 hist(f_tv$wks_on_chart)
+model_df
+```
+
+# Visualization 
+
+```{r}
+ggplot(data = model_df, aes(x = album_release, y = wks_on_chart, color = audio_cluster_pop_)) + 
+  geom_point() + 
+  theme_minimal()
+```
+
+```{r}
+model_df$sqrt_weeks_on_chart <- sqrt(model_df$wks_on_chart)
+
+# Optional: Create explicit bins for the square root weeks on chart
+# This is a step you might adjust depending on how you want your bins defined
+
+
+library(ggplot2)
+
+ggplot(model_df, aes(x = sqrt_weeks_on_chart, fill = audio_cluster_pop_)) +
+  geom_histogram(position = "fill", binwidth = 1) +  # This stacks the bar and scales it to fill 100% of the y-axis proportionally
+  scale_y_continuous(labels = scales::percent) +  # Adjust y-axis to show percentage
+  labs(title = "Histogram of Square Root of Weeks on Chart",
+       x = "Square Root of Weeks on Chart (Binned)",
+       y = "Proportion") +
+  theme_minimal() +
+  guides(fill = guide_legend(title = "Audio Cluster Pop")) + 
+  theme_minimal() + 
+  scale_fill_manual(values = c("more_pop" = "darkgreen", "base_pop" = "#339999", "less_pop" = "lightgreen"))
+
+
+```
+
+```{r}
+ggplot(model_df, aes(x = sqrt_weeks_on_chart, fill = audio_cluster_pop_)) +
+  geom_histogram(position = "stack", binwidth = 1) +  # This stacks the bar and scales it to fill 100% of the y-axis proportionally
+  scale_y_continuous(labels = scales::percent) +  # Adjust y-axis to show percentage
+  labs(title = "Histogram of Square Root of Weeks on Chart",
+       x = "Square Root of Weeks on Chart (Binned)",
+       y = "Proportion") +
+  theme_minimal() +
+  guides(fill = guide_legend(title = "Audio Cluster Pop")) + 
+  theme_minimal()
+
 ```
 
