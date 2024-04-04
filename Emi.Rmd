@@ -1,10 +1,10 @@
 # Open Data
 
 ```{r open-data}
-#install.packages("taylor")
-#library(taylor)
-#library(dplyr)
-#data(package = "taylor")
+# install.packages("taylor")
+# library(taylor)
+# library(dplyr)
+# data(package = "taylor")
 
 # Eras Tour Suprise
 head(eras_tour_surprise)
@@ -50,73 +50,59 @@ num_common_tracks <- length(common_tracks)
 print(num_common_tracks)
 ```
 
-```{r}
-# check for true before set NA vals to 0 in next chunk 
-#sum(is.na(merged_data$wks_on_chart)) == (nrow(taylor_all_songs) - nrow(external_data))
-```
 
 ```{r}
+# make wks_on_chart 0 if no week reocrded
 merged_data$wks_on_chart[is.na(merged_data$wks_on_chart)] = 0
+# check
 sum(merged_data$wks_on_chart == 0) == 95
 ```
 
-```{r}
-sorted_tracks = merged_data %>%
-  select(track_name, wks_on_chart) %>% 
-  arrange(desc(wks_on_chart))
-
-sorted_tracks
-```
 
 # Full Data Frame
+
 ```{r}
+# load
 lyrics_df = read.csv("data/lyrics.csv")
-lyrics_df
-```
+audio_df = read.csv("data/audio.csv")
 
-```{r}
-# everything minus original lyrics 
-```
+# take just cluster and make factor for lyrics
+lyrics_df <- subset(lyrics_df, select = c(track_name, cluster_assignment))
+lyrics_df$lyric_cluster = as.factor(lyrics_df$cluster_assignment)
+lyrics_df <- subset(lyrics_df, select = -cluster_assignment)
 
-```{r}
-merged_data <- merged_data[, -which(names(merged_data) == "lyrics")]
-merged_data
-```
+# take just cluster and make factor for audio
+audio_df <- subset(audio_df, select = c(track_name, cluster_assignment))
+audio_df$audio_cluster = as.factor(audio_df$cluster_assignment)
+audio_df <- subset(audio_df, select = -cluster_assignment)
 
-
-```{r}
+# merge data frames
 full = merge(merged_data, lyrics_df, by = "track_name", 
                     all.y = TRUE)
+full = merge(full, audio_df, by = "track_name", all.y = TRUE)
+
+# make no album a category instead of na and make it a factor
 full$album_name[is.na(full$album_name)] = "no_album"
-#write.csv(full, file = "full.csv", row.names = FALSE)
+full$album_name = as.factor(full$album_name)
+
+# call full model model_df for model below
+model_df = full
 ```
+
 
 # Poisson Regression 
 
 
-```{r}
-# load lyrics cluster 
-lyrics_cluster_df = read.csv("data/lyrics.csv")
-max(lyrics_cluster_df$cluster_assignment)
-
-# load audio cluster 
-audio_cluster_df = read.csv("data/audio.csv")
-max(audio_cluster_df$cluster_assignment)
-
-# combine data
-model_df = full
-model_df$lyric_cluster = as.factor(lyrics_cluster_df$cluster_assignment)
-model_df$audio_cluster = as.factor(audio_cluster_df$cluster_assignment)
-model_df$album_name = as.factor(model_df$album_name)
-```
-
-## Lyrics Cluster Categories 
+## Lyrics Cluster Categories / Histograms 
 
 ```{r}
 #library(ggplot2)
 #library(gridExtra)
 wks_range <- range(model_df$wks_on_chart, na.rm = TRUE)
-lyr_cluster_range <- range(lyrics_cluster_df$cluster_assignment, na.rm = TRUE)
+
+# base line ggplot
+mean_val = mean(model_df$wks_on_chart)
+median_val = median(model_df$wks_on_chart)
 
 baseline = ggplot(data = model_df, aes(x = wks_on_chart)) + 
   geom_histogram(binwidth = 1) +
@@ -137,9 +123,6 @@ for (i in 0:13) {
     scale_x_continuous(limits = wks_range)
 
 }
-
-# check 
-sum(sapply(hist_list, function(x) nrow(x$data))) == nrow(model_df)
 
 # plot
 do.call(grid.arrange, c(hist_list, ncol = 5))
@@ -172,24 +155,24 @@ for (i in 0:13) {
 
 
 do.call(grid.arrange, c(hist_list, ncol = 5))
-baseline
 ```
 
 ```{r}
 # Assuming model_df is your original data frame
-results_df <- data.frame(cluster = integer(), mean = numeric(), median = numeric())
+results_df <- data.frame(cluster = integer(), mean = numeric(), median = numeric(), size = numeric())
 
 for (i in 0:13) {
   cluster_data <- subset(model_df, lyric_cluster == i)
   mean_val <- mean(cluster_data$wks_on_chart, na.rm = TRUE)
   median_val <- median(cluster_data$wks_on_chart, na.rm = TRUE)
+  size = length(cluster_data$wks_on_chart)
   
   # Append the results for this cluster to the results dataframe
-  results_df <- rbind(results_df, data.frame(cluster = i, mean = mean_val, median = median_val))
+  results_df <- rbind(results_df, data.frame(cluster = i, mean = mean_val, median = median_val, size = size))
 }
 
 # baseline
-results_df <- rbind(results_df, data.frame(cluster = "base" , mean = mean(model_df$wks_on_chart, na.rm = TRUE), median = median(model_df$wks_on_chart, na.rm = TRUE)))
+results_df <- rbind(results_df, data.frame(cluster = "base" , mean = mean(model_df$wks_on_chart, na.rm = TRUE), median = median(model_df$wks_on_chart, na.rm = TRUE), size = size(model_df$wks_on_chart)))
 # View the results
 print(results_df)
 
@@ -212,11 +195,10 @@ model_df <- model_df %>%
 
 ```
 
-## Audio Cluster Category  
+## Audio Cluster Categories / Histograms  
 
 ```{r}
-audio_cluster_range <- range(audio_cluster_df$cluster_assignment, na.rm = TRUE)
-audio_cluster_range
+
 hist_list_a <- list(baseline)
 for (i in 0:14) {
   cluster_data <- subset(model_df, audio_cluster == i)
@@ -228,8 +210,6 @@ for (i in 0:14) {
 
 }
 
-# check 
-sum(sapply(hist_list_a, function(x) nrow(x$data))) == nrow(model_df)
 
 # plot
 do.call(grid.arrange, c(hist_list_a, ncol = 4))
@@ -240,19 +220,20 @@ do.call(grid.arrange, c(hist_list_a, ncol = 4))
 ```
 
 ```{r}
-results_df_a <- data.frame(cluster = integer(), mean = numeric(), median = numeric())
+results_df_a <- data.frame(cluster = integer(), mean = numeric(), median = numeric(), size = numeric())
 
 for (i in 0:14) {
   cluster_data <- subset(model_df, audio_cluster == i)
   mean_val <- mean(cluster_data$wks_on_chart, na.rm = TRUE)
   median_val <- median(cluster_data$wks_on_chart, na.rm = TRUE)
+  size = length(cluster_data$wks_on_chart)
   
   # Append the results for this cluster to the results dataframe
-  results_df_a <- rbind(results_df_a, data.frame(cluster = i, mean = mean_val, median = median_val))
+  results_df_a <- rbind(results_df_a, data.frame(cluster = i, mean = mean_val, median = median_val, size = size))
 }
 
 # baseline
-results_df_a <- rbind(results_df_a, data.frame(cluster = "base" , mean = mean(model_df$wks_on_chart, na.rm = TRUE), median = median(model_df$wks_on_chart, na.rm = TRUE)))
+results_df_a <- rbind(results_df_a, data.frame(cluster = "base" , mean = mean(model_df$wks_on_chart, na.rm = TRUE), median = median(model_df$wks_on_chart, na.rm = TRUE), size = size(model_df$wks_on_chart)))
 # View the results
 print(results_df_a)
 
@@ -274,7 +255,7 @@ model_df <- model_df %>%
 
 ```
 
-## Album Grouping
+## Album Grouping + TV + Vault Variables
 
 ```{r}
 albums = unique(model_df$album_name)
@@ -300,12 +281,6 @@ model_df <- model_df %>%
     album_name %in% misc ~ "misc"
   ))
 
-
-```
-
-```{r}
-model_df$audio_cluster_pop_ = as.factor(model_df$audio_cluster_pop_)
-model_df$lyric_cluster_pop_ = as.factor(model_df$lyric_cluster_pop_)
 model_df$album_group_ = as.factor(model_df$album_group_)
 ```
 
@@ -328,7 +303,7 @@ nrow(subset(model_df, TV == TRUE)) == 100
 
 ```
 
-## Model
+## Model 1 (popularity categorized cluster)
 
 ```{r}
 #install.packages("MASS")
@@ -340,35 +315,29 @@ model <- glm(wks_on_chart ~ danceability + energy + speechiness + acousticness +
 summary(model)
 ```
 
+
+## Model 2 (original clusters)
+
 ```{r}
+# model_df$audio_cluster <- relevel(model_df$audio_cluster, ref = "7")
+# model_df$lyric_cluster <- relevel(model_df$lyric_cluster, ref = "4")
 model_2 <- glm(wks_on_chart ~ danceability + energy + speechiness + acousticness + 
                liveness + valence + tempo  + 
                audio_cluster + lyric_cluster + album_group_ + TV + vault,
              data = model_df, family = poisson(link = "log"))
 summary(model_2)
+exp_coef2 <- exp(coef(model_2))
+print(exp_coef2)
 ```
-
+## Goodness of Fit 
 
 ```{r}
-exp_coef <- exp(coef(model))
-print(exp_coef)
-model_df$speechiness
-```
+# Assume `model` is your fitted Poisson regression model
+deviance_residuals <- residuals(model_2, type = "deviance")
+plot(fitted(model_2), deviance_residuals, xlab = "Fitted Values", ylab = "Deviance Residuals")
+abline(h = 0, col = "red")
+# YJ said not that bad
 
-```{r}
-model <- glm(wks_on_chart ~ lyric_cluster_pop_ + 
-               audio_cluster_pop_ + album_group_ + TV,
-             data = model_df, family = poisson(link = "log"))
-summary(model)
-```
-
-```{r}
-t_tv = subset(model_df, TV == TRUE)
-hist(t_tv$wks_on_chart)
-
-f_tv = subset(model_df, TV == FALSE)
-hist(f_tv$wks_on_chart)
-model_df
 ```
 
 # Visualization 
