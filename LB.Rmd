@@ -101,6 +101,12 @@ plot_grid(hist_1, hist_2, hist_3, hist_4, hist_5, nrow = 3)
 ```{r}
 full_cluster <- read.csv("data/full.csv")
 
+full_cluster %>%
+  ggplot(aes(x = wks_on_chart)) + geom_histogram(fill = "black", color = "white") +
+             labs(title = "Histogram of Weeks on Chart", x = "Weeks on Chart", y = "Frequency")
+
+
+
 ```
 
 
@@ -255,15 +261,13 @@ print(ncol(df2))
 
 ```{r}
 ##choose column
-target_column = "speechiness"
+target_column = "danceability"
 
 ##data cleaning
 all_cluster_data_df_specific_cut <- all_cluster_data_df %>%
   dplyr::select(-ep, -album_release, -track_number, -track_name, -artist, -featuring, -bonus_track, -promotional_release, -single_release, -track_release, -mode, -time_signature, -explicit, -key_name, -mode_name, -key_mode, -lyrics, -streak)
 
-```
 
-```{r}
 ## for audio clusters
 for (i in 0:14){
   temp_df <- all_cluster_data_df_specific_cut %>%
