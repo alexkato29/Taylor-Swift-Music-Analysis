@@ -147,8 +147,12 @@ all_cluster_data_df
 all_cluster_data_df %>%
   ggplot(aes(x = audio_cluster_assignment, y = lyrics_cluster_assignment)) + 
   geom_point() + 
-  labs(x = "Audio Cluster Assignment", y = "Lyrics Cluster Assignment")
+  labs(x = "Audio Cluster", y = "Lyrics Cluster", title = "Audio vs Lyrics Cluster Assignment") + 
+  theme_minimal()
 ```
+
+
+
 
 ```{r}
 all_cluster_data_df %>%
@@ -256,12 +260,107 @@ print(ncol(df2))
 
 
 
+```{r}
+#visualization 
+albums <- as.matrix(unique(all_cluster_data_df["album_name"]))
+num_rows <- nrow(albums)
+album_wks_on_chart <- rep(NA, num_rows)
+
+mat <- cbind(albums, album_wks_on_chart )
+
+i = 1
+
+for (alb in albums){
+  x <- all_cluster_data_df %>%
+  filter(album_name == alb) %>%
+  count(s = sum(wks_on_chart)) %>% 
+  dplyr::select(s)
+  mat[i, 2] = as.integer(x[1,1])
+
+  i = i + 1
+}
+
+mat <- as.data.frame(mat)
+mat$album_wks_on_chart <- as.integer(mat$album_wks_on_chart)
+mat %>%
+  ggplot(aes(x = album_name, y = album_wks_on_chart)) + 
+    geom_bar(stat = "identity", fill = "black", color = "white") + 
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+all_cluster_data_df %>%
+ ggplot(aes(x = lyrics_cluster_assignment, y = wks_on_chart)) + 
+    geom_bar(stat = "identity", fill = "black") 
+
+all_cluster_data_df %>%
+  ggplot(aes(audio_cluster_assignment, y = wks_on_chart)) + 
+    geom_bar(stat = "identity", fill = "black") 
+
+
+```
+
+
+
+```{r echo=false}
+
+grid_data <- all_cluster_data_df %>%
+  group_by(audio_cluster_assignment, lyrics_cluster_assignment) %>%
+  summarize(wks_on_chart = sum(wks_on_chart))
+
+ggplot(grid_data, aes(x = audio_cluster_assignment, y = lyrics_cluster_assignment, fill = wks_on_chart)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "yellow", high = "red") + 
+  labs(x = "Audio Cluster", y = "Lyrics Cluster", title = "Weeks on Chart Across Clusters")
+
+grid_data <- all_cluster_data_df %>%
+  group_by(album_name, lyrics_cluster_assignment) %>%
+  summarize(wks_on_chart = sum(wks_on_chart))
+
+ggplot(grid_data, aes(y = album_name, x = lyrics_cluster_assignment, fill = wks_on_chart)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "yellow", high = "red") + 
+  labs(x = "Lyrics Cluster", y = "Album", title = "Weeks on Chart Across Lyrics Cluster and Album")
+
+grid_data <- all_cluster_data_df %>%
+  group_by(album_name, audio_cluster_assignment) %>%
+  summarize(wks_on_chart = sum(wks_on_chart))
+
+ggplot(grid_data, aes(y = album_name, x = audio_cluster_assignment, fill = wks_on_chart)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "yellow", high = "red") +
+  labs(x = "Audio Cluster", y = "Album", title = "Weeks on Chart Across Audio Cluster and Album")
+
+```
+
+
+```{r}
+all_cluster_data_df %>%
+  filter(album_name == "Midnights")
+```
+
+
+
+
+
+
+```{r}
+visual_all_cluster_data_df <- all_cluster_data_df %>%
+  inner_join(mat, by = "album_name")
+visual_all_cluster_data_df$album_wks_on_chart <- as.integer(visual_all_cluster_data_df$album_wks_on_chart)
+
+visual_all_cluster_data_df %>%
+  ggplot(aes(x = album_name, y = album_wks_on_chart)) + 
+    geom_bar(stat = "identity", fill = "black", color = "white") + 
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+
+
 
 ##EDA for specific columns across all clusters
 
 ```{r}
 ##choose column
-target_column = "danceability"
+target_column = "wks_on_chart"
 
 ##data cleaning
 all_cluster_data_df_specific_cut <- all_cluster_data_df %>%
