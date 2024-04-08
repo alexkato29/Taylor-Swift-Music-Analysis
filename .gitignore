@@ -9,3 +9,4 @@ data/mp3s/
 data/audio_backup.csv
 
 venv/
+utils/
