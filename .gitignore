@@ -10,3 +10,4 @@ data/audio_backup.csv
 
 venv/
 utils/
+.Rproj.user
